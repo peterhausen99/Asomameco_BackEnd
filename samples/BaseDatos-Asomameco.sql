@@ -4,34 +4,36 @@
 -- use asomameco;
 
 CREATE TABLE Asociated (
-    UserIdentity VARCHAR(9) NOT NULL PRIMARY KEY,
-    FullName VARCHAR(100) NOT NULL,
-    Email VARCHAR(320) NOT NULL UNIQUE,
-    Phone VARCHAR(20) NOT NULL,
-    CreatedDate TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    ModifiedDate TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    UserIdentity 	VARCHAR(9)		NOT NULL PRIMARY KEY,
+    FullName		VARCHAR(100)	NOT NULL,
+    Email			VARCHAR(320)	NOT NULL UNIQUE,
+    Phone			VARCHAR(20)		NOT NULL,
+    CreatedDate		TIMESTAMP		NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    ModifiedDate	TIMESTAMP 		NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
 CREATE TABLE Events (
-    EventID			INT AUTO_INCREMENT PRIMARY KEY,
-    EventName		VARCHAR(100) NOT NULL,
-    EventDate		DATETIME NOT NULL,
-    Description		VARCHAR(500),
-    Location		VARCHAR(200),
-    Capacity 		INT NOT NULL,
-    IsActive		BIT	NOT NULL DEFAULT 1,
-    FechaCreacion	DATETIME DEFAULT CURRENT_TIMESTAMP
+    EventID			INT				NOT NULL PRIMARY KEY AUTO_INCREMENT,
+    EventName		VARCHAR(100) 	NOT NULL,
+    EventDate		DATETIME		NOT NULL,
+    Description		VARCHAR(500)	NOT NULL,
+    Location		VARCHAR(200)	NOT NULL,
+    Capacity 		INT				NOT NULL,
+    IsActive		BIT				NOT NULL 	DEFAULT 1,
+    FechaCreacion	DATETIME 		NOT NULL	DEFAULT CURRENT_TIMESTAMP
 );
 
 
 CREATE TABLE Asistance (
-    AssistanceId        INT PRIMARY KEY AUTO_INCREMENT,
-    UserIdentity        VARCHAR(9) NOT NULL,
-    EventID             INT NOT NULL,
-    State               ENUM('P', 'C', 'R')        DEFAULT 'P',
-    ConfirmationDate    TIMESTAMP                  DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT AsistanceAsociated_FK FOREIGN KEY (UserIdentity) REFERENCES Asociated(UserIdentity) ON DELETE CASCADE,
-    CONSTRAINT AsistanceEvents_FK FOREIGN KEY (EventID) REFERENCES Events(EventID) ON DELETE CASCADE
+    AssistanceId        INT 					NOT NULL PRIMARY KEY AUTO_INCREMENT,
+    UserIdentity        VARCHAR(9)				NOT NULL,
+    EventID             INT						NOT NULL,
+    State               ENUM('P', 'C', 'R')     NOT NULL	DEFAULT 'P',
+    ConfirmationDate    TIMESTAMP               NOT NULL	DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT AsistanceAsociated_FK	FOREIGN KEY (UserIdentity)
+    REFERENCES Asociated(UserIdentity) 	ON DELETE CASCADE,
+    CONSTRAINT AsistanceEvents_FK		FOREIGN KEY (EventID)
+    REFERENCES Events(EventID) 			ON DELETE CASCADE
 );
 
 
