@@ -1,5 +1,11 @@
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddScoped(provider =>
+{
+	var config = provider.GetRequiredService<IConfiguration>();
+	return new webapi.db.DbConnection(config.GetConnectionString("DefaultConnection") ?? "");
+});
+
 // Add services to the container.
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();

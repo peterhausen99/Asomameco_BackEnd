@@ -14,7 +14,7 @@ namespace webapi.db
 		public async Task<T?> GetItem<T>(string id) where T : class, new()
 		{
 			List<T> items = [];
-			string selectQuery = QueryGen.GetById(typeof(T));
+			string selectQuery = QueryGen<T>.SelectById;
 			await using (MySqlConnection connection = new(connectionString))
 			{
 				await connection.OpenAsync();
@@ -29,11 +29,11 @@ namespace webapi.db
 			}
 			return items.Count > 0 ? items[0] : null;
 		}
-		
+
 		public async Task<List<T>> GetItems<T>() where T : new()
 		{
 			List<T> items = [];
-			string selectQuery = QueryGen.GetAll(typeof(T));
+			string selectQuery = QueryGen<T>.SelectAll;
 			await using (MySqlConnection connection = new(connectionString))
 			{
 				await connection.OpenAsync();

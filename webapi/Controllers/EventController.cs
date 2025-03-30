@@ -6,15 +6,15 @@ namespace webapi.Controllers
 {
 	[Route("api/[controller]")]
 	[ApiController]
-	public class EventController(IConfiguration configuration) : ControllerBase
+	public class EventController(DbConnection _db) : ControllerBase
 	{
 
-		private readonly string _connectionString = configuration.GetConnectionString("DefaultConnection") ?? "";
+		private readonly DbConnection db = _db;
 
 		[HttpGet, Route("{EventId}")]
 		public async Task<ActionResult> GetEvent(int EventId)
 		{
-			var result = await new DbConnection(_connectionString).GetItem<Event>($"{EventId}");
+			var result = await db.GetItem<Event>($"{EventId}");
 			return result is null ? NotFound() : Ok(result);
 		}
 
@@ -22,12 +22,25 @@ namespace webapi.Controllers
 
 		public async Task<ActionResult> GetEvents()
 		{
-			return Ok(await new DbConnection(_connectionString).GetItems<Event>());
+			return Ok(await db.GetItems<Event>());
+		}
+
+		[HttpPost, Route("")]
+		public async Task<ActionResult> AddEvent()
+		{
+			return Ok(QueryGen<Event>.Insert);
 		}
 
 		[HttpPut, Route("")]
-		public async Task<ActionResult> AddEvent(){
-			return Ok();
+		public async Task<ActionResult> UpdateEvent()
+		{
+			return Ok(QueryGen<Event>.Update);
+		}
+
+		[HttpDelete, Route("")]
+		public async Task<ActionResult> DeleteEvent()
+		{
+			return Ok(QueryGen<Event>.Delete);
 		}
 	}
 }

@@ -4,53 +4,44 @@ using webapi.db.attributes;
 namespace webapi.db
 {
 
-	public class QueryGen
+	public class QueryGen<T>
 	{
+		private static string TableName => typeof(T).GetCustomAttribute<TableNameAttribute>()?.TableName ?? typeof(T).Name;
 
-		static string[] GetFieldNames(Type type)
-		{
-			List<string> values = [];
+		private static IEnumerable<string> Fields =>
+									from field
+									in typeof(T).GetFields()
+									select field.Name;
 
-			foreach (var field in type.GetFields())
-			{
-				values.Add(field.Name);
-			}
 
-			return [.. values];
-		}
+		private static string PrimaryKey => (
+				from field
+				in typeof(T).GetFields()
+				where field.GetCustomAttribute<PrimaryKeyAttribute>() is not null
+				select field.Name).FirstOrDefault() ?? $"{TableName}Id";
 
-		static string GetTableName(Type type)
-		{
-			return type.GetCustomAttribute<TableNameAttribute>()?.TableName ?? type.Name;
-		}
+		public static string SelectAll =>
+					$@"select {string.Join(", ", Fields)} " +
+					$"from {TableName}";
 
-		static string GetPrimaryKey(Type type)
-		{
-			foreach (var field in type.GetFields())
-			{
-				if (field.GetCustomAttribute<PrimaryKeyAttribute>() is not null)
-				{
-					return field.Name;
-				}
-			}
-			return "Id";
-		}
+		public static string SelectById =>
+				 	$@"select {string.Join(", ", Fields)} " +
+					$"from {TableName} " +
+					$"where {PrimaryKey}=@KeyValue";
 
-		public static string GetAll(Type type)
-		{
-			return $@"select {string.Join(", ", GetFieldNames(type))} from {GetTableName(type)}";
-		}
+		public static string Insert =>
+					$"insert into ({string.Join(", ", Fields)}) " +
+					$"values ({string.Join(", ", from field in Fields select $"@{field}")}); " +
+					"select LAST_INSERT_ID();";
 
-		public static string GetById(Type type)
-		{
-			return $@"select {string.Join(", ", GetFieldNames(type))} from {GetTableName(type)} where {GetPrimaryKey(type)}=@KeyValue";
-		}
+		public static string Update =>
+					$"update {TableName} " +
+					$"set {string.Join(", ", from field in Fields select $"{field} = @{field}")} " +
+					$"where {PrimaryKey} = @KeyValue";
 
-		//void insert();
-
-		//void update();
-
-		//void remove();
+		public static string Delete =>
+					$"delete from {TableName} " +
+					$"where {PrimaryKey} = @KeyValue";
 	}
 
 }
