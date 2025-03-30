@@ -14,11 +14,10 @@ namespace webapi.db
 		public async Task<T?> GetItem<T>(string id) where T : class, new()
 		{
 			List<T> items = [];
-			string selectQuery = QueryGen<T>.SelectById;
 			await using (MySqlConnection connection = new(connectionString))
 			{
 				await connection.OpenAsync();
-				await using MySqlCommand command = new(selectQuery, connection);
+				await using MySqlCommand command = new(QueryGen<T>.SelectById, connection);
 				command.Parameters.AddWithValue("@KeyValue", id);
 				await using var reader = command.ExecuteReader();
 				while (await reader.ReadAsync())
@@ -33,11 +32,10 @@ namespace webapi.db
 		public async Task<List<T>> GetItems<T>() where T : new()
 		{
 			List<T> items = [];
-			string selectQuery = QueryGen<T>.SelectAll;
 			await using (MySqlConnection connection = new(connectionString))
 			{
 				await connection.OpenAsync();
-				await using MySqlCommand command = new(selectQuery, connection);
+				await using MySqlCommand command = new(QueryGen<T>.SelectAll, connection);
 				await using var reader = command.ExecuteReader();
 				while (await reader.ReadAsync())
 				{
@@ -47,6 +45,27 @@ namespace webapi.db
 			}
 			return items;
 		}
+
+		public async Task<T> Insert<T>(T value)
+		{
+			await using MySqlConnection connection = new(connectionString);
+			await connection.OpenAsync();
+			var ins = QueryGen<T>.Insert;
+			await using MySqlCommand command = new(QueryGen<T>.Insert, connection);
+			foreach (var field in QueryGen<T>.Fields)
+			{
+				if (field != QueryGen<T>.PrimaryKey)
+				{
+					var fieldValue = typeof(T).GetField(field)?.GetValue(value);
+					command.Parameters.AddWithValue($"@{field}", fieldValue ?? DBNull.Value);
+				}
+			}
+
+			var result = await command.ExecuteScalarAsync();
+			typeof(T).GetField(QueryGen<T>.PrimaryKey)?.SetValue(value, result);
+			return value;
+		}
+
 
 		private static T MapReaderToObject<T>(MySqlDataReader reader) where T : new()
 		{
@@ -64,14 +83,12 @@ namespace webapi.db
 					if (reader[i] != DBNull.Value)
 					{
 						object value = reader[i];
-						if (field.FieldType == typeof(bool) && value is ulong longVal)
+						field.SetValue(item, (field.FieldType, value) switch
 						{
-							field.SetValue(item, longVal != 0);
-						}
-						else
-						{
-							field.SetValue(item, value);
-						}
+							(Type boolType, ulong longVal) when boolType == typeof(bool) => longVal != 0,
+							(Type ulongType, int intVal) when ulongType == typeof(ulong) => (ulong)intVal,
+							_ => Convert.ChangeType(value, field.FieldType)
+						});
 					}
 				}
 			}

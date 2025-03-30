@@ -8,13 +8,19 @@ namespace webapi.db
 	{
 		private static string TableName => typeof(T).GetCustomAttribute<TableNameAttribute>()?.TableName ?? typeof(T).Name;
 
-		private static IEnumerable<string> Fields =>
+		public static IEnumerable<string> Fields =>
 									from field
 									in typeof(T).GetFields()
 									select field.Name;
 
+		public static IEnumerable<string> InsertFields =>
+									from field
+									in typeof(T).GetFields()
+									where field.Name != PrimaryKey
+									select field.Name;
 
-		private static string PrimaryKey => (
+
+		public static string PrimaryKey => (
 				from field
 				in typeof(T).GetFields()
 				where field.GetCustomAttribute<PrimaryKeyAttribute>() is not null
@@ -30,8 +36,8 @@ namespace webapi.db
 					$"where {PrimaryKey}=@KeyValue";
 
 		public static string Insert =>
-					$"insert into ({string.Join(", ", Fields)}) " +
-					$"values ({string.Join(", ", from field in Fields select $"@{field}")}); " +
+					$"insert into {TableName} ({string.Join(", ", InsertFields)}) " +
+					$"values ({string.Join(", ", from field in InsertFields select $"@{field}")}); " +
 					"select LAST_INSERT_ID();";
 
 		public static string Update =>

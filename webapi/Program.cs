@@ -12,6 +12,8 @@ builder.Services.AddOpenApi();
 builder.Services.AddControllers().AddJsonOptions(options =>
 {
 	options.JsonSerializerOptions.IncludeFields = true;
+	options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
+	options.JsonSerializerOptions.PropertyNamingPolicy = null;
 }
 );
 

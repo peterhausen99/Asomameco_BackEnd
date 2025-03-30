@@ -25,10 +25,14 @@ namespace webapi.Controllers
 			return Ok(await db.GetItems<Event>());
 		}
 
-		[HttpPost, Route("")]
-		public async Task<ActionResult> AddEvent()
+		[HttpPost("")]
+		public async Task<ActionResult<Event>> AddEvent([FromBody] Event ev)
 		{
-			return Ok(QueryGen<Event>.Insert);
+			var result = await db.Insert(ev);
+
+			return result.EventId != 0
+				? Ok(result)
+				: BadRequest();
 		}
 
 		[HttpPut, Route("")]
