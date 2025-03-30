@@ -20,9 +20,14 @@ namespace webapi.Controllers
 
 		[HttpGet, Route("")]
 
-		public async Task<ActionResult> Index()
+		public async Task<ActionResult> GetEvents()
 		{
 			return Ok(await new DbConnection(_connectionString).GetItems<Event>());
+		}
+
+		[HttpPut, Route("")]
+		public async Task<ActionResult> AddEvent(){
+			return Ok();
 		}
 	}
 }
