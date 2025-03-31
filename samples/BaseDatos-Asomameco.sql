@@ -1,39 +1,42 @@
 
-#create schema asomameco;
+-- create schema asomameco;
 
 -- use asomameco;
 
-CREATE TABLE Asociated (
-    UserIdentity 	VARCHAR(9)		NOT NULL PRIMARY KEY,
-    FullName		VARCHAR(100)	NOT NULL,
-    Email			VARCHAR(320)	NOT NULL UNIQUE,
-    Phone			VARCHAR(20)		NOT NULL,
-    CreatedDate		TIMESTAMP		NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    ModifiedDate	TIMESTAMP 		NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+
+
+CREATE TABLE IF NOT EXISTS Asociated (
+	UserIdentity 	VARCHAR(9)		NOT NULL PRIMARY KEY,
+	FullName		VARCHAR(100)	NOT NULL,
+	Email			VARCHAR(320)	NOT NULL UNIQUE,
+	Phone			VARCHAR(20)		NOT NULL,
+	CreatedDate		TIMESTAMP		NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	ModifiedDate	TIMESTAMP 		NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
-CREATE TABLE Events (
-    EventID			INT				NOT NULL PRIMARY KEY AUTO_INCREMENT,
-    EventName		VARCHAR(100) 	NOT NULL,
-    EventDate		DATETIME		NOT NULL,
-    Description		VARCHAR(500)	NOT NULL,
-    Location		VARCHAR(200)	NOT NULL,
-    Capacity 		INT				NOT NULL,
-    IsActive		BIT				NOT NULL 	DEFAULT 1,
-    CreatedDate		DATETIME 		NOT NULL	DEFAULT CURRENT_TIMESTAMP
+CREATE TABLE IF NOT EXISTS Events (
+	EventID			INT				NOT NULL PRIMARY KEY AUTO_INCREMENT,
+	EventName		VARCHAR(100) 	NOT NULL,
+	EventDate		DATETIME		NOT NULL,
+	Description		VARCHAR(500)	NOT NULL,
+	Location		VARCHAR(200)	NOT NULL,
+	Capacity 		INT				NOT NULL,
+	IsActive		BIT				NOT NULL 	DEFAULT 1,
+	CreatedDate		DATETIME 		NOT NULL	DEFAULT CURRENT_TIMESTAMP
 );
 
 
-CREATE TABLE Asistance (
-    AssistanceId        INT 					NOT NULL PRIMARY KEY AUTO_INCREMENT,
-    UserIdentity        VARCHAR(9)				NOT NULL,
-    EventID             INT						NOT NULL,
-    State               ENUM('P', 'C', 'R')     NOT NULL	DEFAULT 'P',
-    ConfirmationDate    TIMESTAMP               NOT NULL	DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT AsistanceAsociated_FK	FOREIGN KEY (UserIdentity)
-    REFERENCES Asociated(UserIdentity) 	ON DELETE CASCADE,
-    CONSTRAINT AsistanceEvents_FK		FOREIGN KEY (EventID)
-    REFERENCES Events(EventID) 			ON DELETE CASCADE
+CREATE TABLE IF NOT EXISTS Assistance (
+	AssistanceId		INT						NOT NULL PRIMARY KEY AUTO_INCREMENT,
+	UserIdentity		VARCHAR(9)				NOT NULL,
+	EventID				INT						NOT NULL,
+	State				ENUM('P', 'C', 'R')		NOT NULL DEFAULT 'P',
+	ConfirmationDate	TIMESTAMP				NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	CONSTRAINT AssistanceAsociated_FK			FOREIGN KEY (UserIdentity)
+		REFERENCES Asociated(UserIdentity)		ON DELETE CASCADE,
+	CONSTRAINT AssistanceEvents_FK				FOREIGN KEY (EventID)
+		REFERENCES Events(EventID)				ON DELETE CASCADE,
+	CONSTRAINT Assistance_UK					UNIQUE KEY(UserIdentity, EventID)
 );
 
 

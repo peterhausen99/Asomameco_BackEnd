@@ -1,5 +1,4 @@
 
-using System.Threading.Tasks;
 using MySql.Data.MySqlClient;
 
 namespace webapi.db
@@ -48,22 +47,32 @@ namespace webapi.db
 
 		public async Task<T> Insert<T>(T value)
 		{
-			await using MySqlConnection connection = new(connectionString);
-			await connection.OpenAsync();
-			var ins = QueryGen<T>.Insert;
-			await using MySqlCommand command = new(QueryGen<T>.Insert, connection);
-			foreach (var field in QueryGen<T>.InsertFields)
+			try
 			{
-				if (field != QueryGen<T>.PrimaryKey)
+				await using MySqlConnection connection = new(connectionString);
+				await connection.OpenAsync();
+				await using MySqlCommand command = new(QueryGen<T>.Insert, connection);
+				foreach (var field in QueryGen<T>.InsertFields)
 				{
+					var fieldInfo = typeof(T).GetField(field);
 					var fieldValue = typeof(T).GetField(field)?.GetValue(value);
+
+					if (fieldInfo?.FieldType.IsEnum == true && fieldValue != null)
+					{
+						fieldValue = EnumSerializer.ToString(fieldInfo.FieldType, fieldValue);
+					}
+
 					command.Parameters.AddWithValue($"@{field}", fieldValue ?? DBNull.Value);
 				}
-			}
 
-			var result = await command.ExecuteScalarAsync();
-			typeof(T).GetField(QueryGen<T>.PrimaryKey)?.SetValue(value, result);
-			return value;
+				var result = await command.ExecuteScalarAsync();
+				typeof(T).GetField(QueryGen<T>.PrimaryKey)?.SetValue(value, result);
+				return value;
+			}
+			catch (MySqlException ex) when (ex.Number == 1062) // ER_DUP_ENTRY
+			{
+				return value;
+			}
 		}
 
 		public async Task<bool> Update<T>(T value)
@@ -74,7 +83,13 @@ namespace webapi.db
 			await using MySqlCommand command = new(QueryGen<T>.Update, connection);
 			foreach (var field in QueryGen<T>.Fields)
 			{
+				var fieldInfo = typeof(T).GetField(field);
 				var fieldValue = typeof(T).GetField(field)?.GetValue(value);
+
+				if (fieldInfo?.FieldType.IsEnum == true && fieldValue != null)
+				{
+					fieldValue = EnumSerializer.ToString(fieldInfo.FieldType, fieldValue);
+				}
 				command.Parameters.AddWithValue($"@{field}", fieldValue ?? DBNull.Value);
 			}
 			var pkValue = typeof(T).GetField(QueryGen<T>.PrimaryKey)?.GetValue(value);
@@ -116,6 +131,8 @@ namespace webapi.db
 						{
 							(Type boolType, ulong longVal) when boolType == typeof(bool) => longVal != 0,
 							(Type ulongType, int intVal) when ulongType == typeof(ulong) => (ulong)intVal,
+							(Type enumType, string strVal) when enumType.IsEnum => EnumSerializer.Parse(enumType, strVal),
+							(Type enumType, _) when enumType.IsEnum => EnumSerializer.ToString(enumType, value),
 							_ => Convert.ChangeType(value, field.FieldType)
 						});
 					}

@@ -1,3 +1,6 @@
+using System.Text.Json;
+using System.Text.Json.Serialization;
+
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddScoped(provider =>
@@ -14,6 +17,7 @@ builder.Services.AddControllers().AddJsonOptions(options =>
 	options.JsonSerializerOptions.IncludeFields = true;
 	options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
 	options.JsonSerializerOptions.PropertyNamingPolicy = null;
+	options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter(JsonNamingPolicy.CamelCase));
 }
 );
 

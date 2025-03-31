@@ -5,11 +5,8 @@ namespace webapi.model
 	[TableName("Events")]
 	public class Event
 	{
-		public Event()
-		{
-		}
-
 		[PrimaryKey]
+		[IdentityField]
 		public ulong EventId = 0;
 
 		[ColumnLength(100)]
