@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
-using webapi.dao;
 using webapi.db;
+using webapi.model;
 
 namespace webapi.Controllers
 {

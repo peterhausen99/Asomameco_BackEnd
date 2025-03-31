@@ -1,6 +1,6 @@
 using webapi.db.attributes;
 
-namespace webapi.dao
+namespace webapi.model
 {
 	[TableName("Events")]
 	public class Event
