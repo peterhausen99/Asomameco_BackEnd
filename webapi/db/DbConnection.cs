@@ -1,5 +1,7 @@
 
+using System.Reflection;
 using MySql.Data.MySqlClient;
+using webapi.db.attributes;
 
 namespace webapi.db
 {
@@ -45,7 +47,7 @@ namespace webapi.db
 			return items;
 		}
 
-		public async Task<T> Insert<T>(T value)
+		public async Task<T?> Insert<T>(T value) where T : class
 		{
 			try
 			{
@@ -66,36 +68,47 @@ namespace webapi.db
 				}
 
 				var result = await command.ExecuteScalarAsync();
-				typeof(T).GetField(QueryGen<T>.PrimaryKey)?.SetValue(value, result);
+				var IdField = typeof(T).GetField(QueryGen<T>.PrimaryKey);
+				if (IdField?.GetCustomAttribute<IdentityFieldAttribute>() is not null)
+				{
+					IdField?.SetValue(value, result);
+				}
 				return value;
 			}
 			catch (MySqlException ex) when (ex.Number == 1062) // ER_DUP_ENTRY
 			{
-				return value;
+				return null;
 			}
 		}
 
 		public async Task<bool> Update<T>(T value)
 		{
-			await using MySqlConnection connection = new(connectionString);
-			await connection.OpenAsync();
-			var ins = QueryGen<T>.Insert;
-			await using MySqlCommand command = new(QueryGen<T>.Update, connection);
-			foreach (var field in QueryGen<T>.Fields)
+			try
 			{
-				var fieldInfo = typeof(T).GetField(field);
-				var fieldValue = typeof(T).GetField(field)?.GetValue(value);
-
-				if (fieldInfo?.FieldType.IsEnum == true && fieldValue != null)
+				await using MySqlConnection connection = new(connectionString);
+				await connection.OpenAsync();
+				var ins = QueryGen<T>.Insert;
+				await using MySqlCommand command = new(QueryGen<T>.Update, connection);
+				foreach (var field in QueryGen<T>.Fields)
 				{
-					fieldValue = EnumSerializer.ToString(fieldInfo.FieldType, fieldValue);
-				}
-				command.Parameters.AddWithValue($"@{field}", fieldValue ?? DBNull.Value);
-			}
-			var pkValue = typeof(T).GetField(QueryGen<T>.PrimaryKey)?.GetValue(value);
-			command.Parameters.AddWithValue("@KeyValue", pkValue);
+					var fieldInfo = typeof(T).GetField(field);
+					var fieldValue = typeof(T).GetField(field)?.GetValue(value);
 
-			return await command.ExecuteNonQueryAsync() > 0;
+					if (fieldInfo?.FieldType.IsEnum == true && fieldValue != null)
+					{
+						fieldValue = EnumSerializer.ToString(fieldInfo.FieldType, fieldValue);
+					}
+					command.Parameters.AddWithValue($"@{field}", fieldValue ?? DBNull.Value);
+				}
+				var pkValue = typeof(T).GetField(QueryGen<T>.PrimaryKey)?.GetValue(value);
+				command.Parameters.AddWithValue("@KeyValue", pkValue);
+
+				return await command.ExecuteNonQueryAsync() > 0;
+			}
+			catch (MySqlException ex) when (ex.Number == 1062) // ER_DUP_ENTRY
+			{
+				return false;
+			}
 		}
 
 		public async Task<bool> Delete<T>(T value)

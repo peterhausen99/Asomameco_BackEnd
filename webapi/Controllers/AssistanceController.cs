@@ -30,7 +30,7 @@ namespace webapi.Controllers
 		{
 			var result = await db.Insert(@event);
 
-			return result.AssistanceId != 0
+			return result is not null
 				? Ok(result)
 				: BadRequest();
 		}
