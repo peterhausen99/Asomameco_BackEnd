@@ -26,9 +26,9 @@ namespace webapi.Controllers
 		}
 
 		[HttpPost("")]
-		public async Task<ActionResult<Event>> AddEvent([FromBody] Event ev)
+		public async Task<ActionResult<Event>> AddEvent([FromBody] Event @event)
 		{
-			var result = await db.Insert(ev);
+			var result = await db.Insert(@event);
 
 			return result.EventId != 0
 				? Ok(result)
@@ -36,15 +36,23 @@ namespace webapi.Controllers
 		}
 
 		[HttpPut, Route("")]
-		public async Task<ActionResult> UpdateEvent()
+		public async Task<ActionResult> UpdateEvent([FromBody] Event @event)
 		{
-			return Ok(QueryGen<Event>.Update);
+			var result = await db.Update(@event);
+
+			return result
+				? Ok(result)
+				: BadRequest(result);
 		}
 
 		[HttpDelete, Route("")]
-		public async Task<ActionResult> DeleteEvent()
+		public async Task<ActionResult> DeleteEvent([FromBody] Event @event)
 		{
-			return Ok(QueryGen<Event>.Delete);
+			var result = await db.Delete(@event);
+
+			return result
+				? Ok(result)
+				: BadRequest(result);
 		}
 	}
 }

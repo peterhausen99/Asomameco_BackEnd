@@ -52,7 +52,7 @@ namespace webapi.db
 			await connection.OpenAsync();
 			var ins = QueryGen<T>.Insert;
 			await using MySqlCommand command = new(QueryGen<T>.Insert, connection);
-			foreach (var field in QueryGen<T>.Fields)
+			foreach (var field in QueryGen<T>.InsertFields)
 			{
 				if (field != QueryGen<T>.PrimaryKey)
 				{
@@ -64,6 +64,35 @@ namespace webapi.db
 			var result = await command.ExecuteScalarAsync();
 			typeof(T).GetField(QueryGen<T>.PrimaryKey)?.SetValue(value, result);
 			return value;
+		}
+
+		public async Task<bool> Update<T>(T value)
+		{
+			await using MySqlConnection connection = new(connectionString);
+			await connection.OpenAsync();
+			var ins = QueryGen<T>.Insert;
+			await using MySqlCommand command = new(QueryGen<T>.Update, connection);
+			foreach (var field in QueryGen<T>.Fields)
+			{
+				var fieldValue = typeof(T).GetField(field)?.GetValue(value);
+				command.Parameters.AddWithValue($"@{field}", fieldValue ?? DBNull.Value);
+			}
+			var pkValue = typeof(T).GetField(QueryGen<T>.PrimaryKey)?.GetValue(value);
+			command.Parameters.AddWithValue("@KeyValue", pkValue);
+
+			return await command.ExecuteNonQueryAsync() > 0;
+		}
+
+		public async Task<bool> Delete<T>(T value)
+		{
+			await using MySqlConnection connection = new(connectionString);
+			await connection.OpenAsync();
+			var ins = QueryGen<T>.Delete;
+			await using MySqlCommand command = new(QueryGen<T>.Delete, connection);
+			var pkValue = typeof(T).GetField(QueryGen<T>.PrimaryKey)?.GetValue(value);
+			command.Parameters.AddWithValue("@KeyValue", pkValue);
+
+			return await command.ExecuteNonQueryAsync() > 0;
 		}
 
 
