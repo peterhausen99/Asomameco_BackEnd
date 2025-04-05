@@ -1,15 +1,15 @@
 using Microsoft.AspNetCore.Mvc;
-using webapi.db;
+using webapi.db.connection;
 using webapi.model;
 
 namespace webapi.Controllers
 {
 	[Route("api/[controller]")]
 	[ApiController]
-	public class AsociatedController(DbConnection _db) : ControllerBase
+	public class AsociatedController(IDbConnection _db) : ControllerBase
 	{
 
-		private readonly DbConnection db = _db;
+		private readonly IDbConnection db = _db;
 
 		[HttpGet, Route("{AsociatedId}")]
 		public async Task<ActionResult> GetAsociated(int AsociatedId)

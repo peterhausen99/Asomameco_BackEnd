@@ -1,15 +1,15 @@
 using Microsoft.AspNetCore.Mvc;
-using webapi.db;
+using webapi.db.connection;
 using webapi.model;
 
 namespace webapi.Controllers
 {
 	[Route("api/[controller]")]
 	[ApiController]
-	public class AssistanceController(DbConnection _db) : ControllerBase
+	public class AssistanceController(IDbConnection _db) : ControllerBase
 	{
 
-		private readonly DbConnection db = _db;
+		private readonly IDbConnection db = _db;
 
 		[HttpGet, Route("{AsitanceId}")]
 		public async Task<ActionResult> GetAsistance(int AsitanceId)

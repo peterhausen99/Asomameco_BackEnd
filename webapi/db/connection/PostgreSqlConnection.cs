@@ -1,13 +1,13 @@
 
 using System.Reflection;
-using MySql.Data.MySqlClient;
+using Npgsql;
 using webapi.db.attributes;
 
-namespace webapi.db
+namespace webapi.db.connection
 {
 
 
-	public class DbConnection(string connectionString)
+	public class PostgreSqlDbConnection(string connectionString) : IDbConnection
 	{
 		private readonly string connectionString = new(connectionString);
 
@@ -15,10 +15,9 @@ namespace webapi.db
 		public async Task<T?> GetItem<T>(string id) where T : class, new()
 		{
 			List<T> items = [];
-			await using (MySqlConnection connection = new(connectionString))
+			await using (var datasource = NpgsqlDataSource.Create(connectionString))
 			{
-				await connection.OpenAsync();
-				await using MySqlCommand command = new(QueryGen<T>.SelectById, connection);
+				await using var command = datasource.CreateCommand(QueryGen<T>.SelectById);
 				command.Parameters.AddWithValue("@KeyValue", id);
 				await using var reader = command.ExecuteReader();
 				while (await reader.ReadAsync())
@@ -33,10 +32,9 @@ namespace webapi.db
 		public async Task<List<T>> GetItems<T>() where T : new()
 		{
 			List<T> items = [];
-			await using (MySqlConnection connection = new(connectionString))
+			await using (var datasource = NpgsqlDataSource.Create(connectionString))
 			{
-				await connection.OpenAsync();
-				await using MySqlCommand command = new(QueryGen<T>.SelectAll, connection);
+				await using var command = datasource.CreateCommand(QueryGen<T>.SelectAll);
 				await using var reader = command.ExecuteReader();
 				while (await reader.ReadAsync())
 				{
@@ -51,9 +49,8 @@ namespace webapi.db
 		{
 			try
 			{
-				await using MySqlConnection connection = new(connectionString);
-				await connection.OpenAsync();
-				await using MySqlCommand command = new(QueryGen<T>.Insert, connection);
+				await using var datasource = NpgsqlDataSource.Create(connectionString);
+				await using var command = datasource.CreateCommand(QueryGen<T>.Insert);
 				foreach (var field in QueryGen<T>.InsertFields)
 				{
 					var fieldInfo = typeof(T).GetField(field);
@@ -75,7 +72,7 @@ namespace webapi.db
 				}
 				return value;
 			}
-			catch (MySqlException ex) when (ex.Number == 1062) // ER_DUP_ENTRY
+			catch (PostgresException ex) when (ex.SqlState == "23505") // ER_DUP_ENTRY
 			{
 				return null;
 			}
@@ -85,10 +82,8 @@ namespace webapi.db
 		{
 			try
 			{
-				await using MySqlConnection connection = new(connectionString);
-				await connection.OpenAsync();
-				var ins = QueryGen<T>.Insert;
-				await using MySqlCommand command = new(QueryGen<T>.Update, connection);
+				await using var datasource = NpgsqlDataSource.Create(connectionString);
+				await using var command = datasource.CreateCommand(QueryGen<T>.Update);
 				foreach (var field in QueryGen<T>.Fields)
 				{
 					var fieldInfo = typeof(T).GetField(field);
@@ -101,11 +96,11 @@ namespace webapi.db
 					command.Parameters.AddWithValue($"@{field}", fieldValue ?? DBNull.Value);
 				}
 				var pkValue = typeof(T).GetField(QueryGen<T>.PrimaryKey)?.GetValue(value);
-				command.Parameters.AddWithValue("@KeyValue", pkValue);
+				command.Parameters.AddWithValue("@KeyValue", pkValue ?? DBNull.Value);
 
 				return await command.ExecuteNonQueryAsync() > 0;
 			}
-			catch (MySqlException ex) when (ex.Number == 1062) // ER_DUP_ENTRY
+			catch (PostgresException ex) when (ex.SqlState == "23505") // ER_DUP_ENTRY
 			{
 				return false;
 			}
@@ -113,18 +108,17 @@ namespace webapi.db
 
 		public async Task<bool> Delete<T>(T value)
 		{
-			await using MySqlConnection connection = new(connectionString);
-			await connection.OpenAsync();
+			await using var datasource = NpgsqlDataSource.Create(connectionString);
 			var ins = QueryGen<T>.Delete;
-			await using MySqlCommand command = new(QueryGen<T>.Delete, connection);
+			await using var command = datasource.CreateCommand(QueryGen<T>.Delete);
 			var pkValue = typeof(T).GetField(QueryGen<T>.PrimaryKey)?.GetValue(value);
-			command.Parameters.AddWithValue("@KeyValue", pkValue);
+			command.Parameters.AddWithValue("@KeyValue", pkValue ?? DBNull.Value);
 
 			return await command.ExecuteNonQueryAsync() > 0;
 		}
 
 
-		private static T MapReaderToObject<T>(MySqlDataReader reader) where T : new()
+		private static T MapReaderToObject<T>(NpgsqlDataReader reader) where T : new()
 		{
 			T item = new();
 			var fields = typeof(T).GetFields();

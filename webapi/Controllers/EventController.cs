@@ -1,15 +1,15 @@
 using Microsoft.AspNetCore.Mvc;
-using webapi.db;
+using webapi.db.connection;
 using webapi.model;
 
 namespace webapi.Controllers
 {
 	[Route("api/[controller]")]
 	[ApiController]
-	public class EventController(DbConnection _db) : ControllerBase
+	public class EventController(IDbConnection _db) : ControllerBase
 	{
 
-		private readonly DbConnection db = _db;
+		private readonly IDbConnection db = _db;
 
 		[HttpGet, Route("{EventId}")]
 		public async Task<ActionResult> GetEvent(int EventId)
@@ -30,7 +30,7 @@ namespace webapi.Controllers
 		{
 			var result = await db.Insert(@event);
 
-			return result.EventId != 0
+			return result?.EventId  != 0
 				? Ok(result)
 				: BadRequest();
 		}
