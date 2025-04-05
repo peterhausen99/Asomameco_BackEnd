@@ -49,6 +49,28 @@ namespace webapi.db
 		public static string Delete =>
 					$"delete from {TableName} " +
 					$"where {PrimaryKey} = @KeyValue";
+
+		public static object CastKey(string value)
+		{
+			var pkField = typeof(T).GetFields()
+								  .FirstOrDefault(f => f.GetCustomAttribute<PrimaryKeyAttribute>() != null);
+
+			Type pkType = pkField?.FieldType ?? typeof(string);
+
+			try
+			{
+				return pkType switch
+				{
+					Type t when t == typeof(int) => int.Parse(value),
+					Type t when t == typeof(ulong) => long.Parse(value),
+					_ => value
+				};
+			}
+			catch (FormatException)
+			{
+				return value;
+			}
+		}
 	}
 
 }

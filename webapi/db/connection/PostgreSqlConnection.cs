@@ -18,7 +18,8 @@ namespace webapi.db.connection
 			await using (var datasource = NpgsqlDataSource.Create(connectionString))
 			{
 				await using var command = datasource.CreateCommand(QueryGen<T>.SelectById);
-				command.Parameters.AddWithValue("@KeyValue", id);
+				var idValue = QueryGen<T>.CastKey(id);
+				command.Parameters.AddWithValue("@KeyValue", idValue);
 				await using var reader = command.ExecuteReader();
 				while (await reader.ReadAsync())
 				{
