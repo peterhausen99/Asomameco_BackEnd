@@ -30,7 +30,7 @@ namespace webapi.Controllers
 		{
 			var result = await db.Insert(@event);
 
-			return result?.EventId  != 0
+			return result?.EventId != 0
 				? Ok(result)
 				: BadRequest();
 		}
@@ -45,10 +45,10 @@ namespace webapi.Controllers
 				: BadRequest(result);
 		}
 
-		[HttpDelete, Route("")]
-		public async Task<ActionResult> DeleteEvent([FromBody] Event @event)
+		[HttpDelete, Route("{EventId}")]
+		public async Task<ActionResult> DeleteEvent(int EventId)
 		{
-			var result = await db.Delete(@event);
+			var result = await db.Delete<Event>(EventId);
 
 			return result
 				? Ok(result)

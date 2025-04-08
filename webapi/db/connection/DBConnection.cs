@@ -6,7 +6,7 @@ namespace webapi.db.connection
 	public interface IDbConnection
 	{
 
-		public Task<T?> GetItem<T>(string id) where T : class, new();
+		public Task<T?> GetItem<T>(object id) where T : class, new();
 
 		public Task<List<T>> GetItems<T>() where T : new();
 
@@ -14,7 +14,7 @@ namespace webapi.db.connection
 
 		public Task<bool> Update<T>(T value);
 
-		public Task<bool> Delete<T>(T value);
+		public Task<bool> Delete<T>(object id);
 
 	}
 }

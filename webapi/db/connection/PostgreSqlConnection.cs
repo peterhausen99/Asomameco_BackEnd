@@ -12,7 +12,7 @@ namespace webapi.db.connection
 		private readonly string connectionString = new(connectionString);
 
 
-		public async Task<T?> GetItem<T>(string id) where T : class, new()
+		public async Task<T?> GetItem<T>(object id) where T : class, new()
 		{
 			List<T> items = [];
 			await using (var datasource = NpgsqlDataSource.Create(connectionString))
@@ -107,13 +107,13 @@ namespace webapi.db.connection
 			}
 		}
 
-		public async Task<bool> Delete<T>(T value)
+		public async Task<bool> Delete<T>(object id)
 		{
 			await using var datasource = NpgsqlDataSource.Create(connectionString);
 			var ins = QueryGen<T>.Delete;
 			await using var command = datasource.CreateCommand(QueryGen<T>.Delete);
-			var pkValue = typeof(T).GetField(QueryGen<T>.PrimaryKey)?.GetValue(value);
-			command.Parameters.AddWithValue("@KeyValue", pkValue ?? DBNull.Value);
+			var idValue = QueryGen<T>.CastKey(id);
+			command.Parameters.AddWithValue("@KeyValue", idValue);
 
 			return await command.ExecuteNonQueryAsync() > 0;
 		}

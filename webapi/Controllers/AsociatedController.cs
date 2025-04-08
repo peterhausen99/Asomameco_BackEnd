@@ -12,9 +12,9 @@ namespace webapi.Controllers
 		private readonly IDbConnection db = _db;
 
 		[HttpGet, Route("{AsociatedId}")]
-		public async Task<ActionResult> GetAsociated(int AsociatedId)
+		public async Task<ActionResult> GetAsociated(int asociatedId)
 		{
-			var result = await db.GetItem<Asociated>($"{AsociatedId}");
+			var result = await db.GetItem<Asociated>($"{asociatedId}");
 			return result is null ? NotFound() : Ok(result);
 		}
 
@@ -26,9 +26,9 @@ namespace webapi.Controllers
 		}
 
 		[HttpPost("")]
-		public async Task<ActionResult<Asociated>> AddAsociated([FromBody] Asociated @Asociated)
+		public async Task<ActionResult<Asociated>> AddAsociated([FromBody] Asociated asociated)
 		{
-			var result = await db.Insert(@Asociated);
+			var result = await db.Insert(asociated);
 
 			return result is not null
 				? Ok(result)
@@ -36,19 +36,19 @@ namespace webapi.Controllers
 		}
 
 		[HttpPut, Route("")]
-		public async Task<ActionResult> UpdateAsociated([FromBody] Asociated @Asociated)
+		public async Task<ActionResult> UpdateAsociated([FromBody] Asociated asociated)
 		{
-			var result = await db.Update(@Asociated);
+			var result = await db.Update(asociated);
 
 			return result
 				? Ok(result)
 				: BadRequest(result);
 		}
 
-		[HttpDelete, Route("")]
-		public async Task<ActionResult> DeleteAsociated([FromBody] Asociated @Asociated)
+		[HttpDelete, Route("{AsociatedId}")]
+		public async Task<ActionResult> DeleteAsociated(int asociatedId)
 		{
-			var result = await db.Delete(@Asociated);
+			var result = await db.Delete<Asociated>(asociatedId);
 
 			return result
 				? Ok(result)

@@ -50,7 +50,7 @@ namespace webapi.db
 					$"delete from {TableName} " +
 					$"where {PrimaryKey} = @KeyValue";
 
-		public static object CastKey(string value)
+		public static object CastKey(object value)
 		{
 			var pkField = typeof(T).GetFields()
 								  .FirstOrDefault(f => f.GetCustomAttribute<PrimaryKeyAttribute>() != null);
@@ -61,8 +61,8 @@ namespace webapi.db
 			{
 				return pkType switch
 				{
-					Type t when t == typeof(int) => int.Parse(value),
-					Type t when t == typeof(ulong) => long.Parse(value),
+					Type t when t == typeof(int) => int.Parse(value.ToString() ?? ""),
+					Type t when t == typeof(ulong) => long.Parse(value.ToString() ?? ""),
 					_ => value
 				};
 			}

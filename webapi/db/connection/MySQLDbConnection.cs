@@ -12,7 +12,7 @@ namespace webapi.db.connection
 		private readonly string connectionString = new(connectionString);
 
 
-		public async Task<T?> GetItem<T>(string id) where T : class, new()
+		public async Task<T?> GetItem<T>(object id) where T : class, new()
 		{
 			List<T> items = [];
 			await using (MySqlConnection connection = new(connectionString))
@@ -111,7 +111,7 @@ namespace webapi.db.connection
 			}
 		}
 
-		public async Task<bool> Delete<T>(T value)
+		public async Task<bool> Delete<T>(object value)
 		{
 			await using MySqlConnection connection = new(connectionString);
 			await connection.OpenAsync();

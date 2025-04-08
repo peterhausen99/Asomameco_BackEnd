@@ -11,24 +11,24 @@ namespace webapi.Controllers
 
 		private readonly IDbConnection db = _db;
 
-		[HttpGet, Route("{AsitanceId}")]
-		public async Task<ActionResult> GetAsistance(int AsitanceId)
+		[HttpGet, Route("{AssitanceId}")]
+		public async Task<ActionResult> GetAssistance(int AssitanceId)
 		{
-			var result = await db.GetItem<Assistance>($"{AsitanceId}");
+			var result = await db.GetItem<Assistance>($"{AssitanceId}");
 			return result is null ? NotFound() : Ok(result);
 		}
 
 		[HttpGet, Route("")]
 
-		public async Task<ActionResult> GetAsistances()
+		public async Task<ActionResult> GetAssistances()
 		{
 			return Ok(await db.GetItems<Assistance>());
 		}
 
 		[HttpPost("")]
-		public async Task<ActionResult<Assistance>> AddAsistance([FromBody] Assistance @event)
+		public async Task<ActionResult<Assistance>> AddAssistance([FromBody] Assistance assistance)
 		{
-			var result = await db.Insert(@event);
+			var result = await db.Insert(assistance);
 
 			return result is not null
 				? Ok(result)
@@ -36,19 +36,19 @@ namespace webapi.Controllers
 		}
 
 		[HttpPut, Route("")]
-		public async Task<ActionResult> UpdateEvent([FromBody] Assistance @event)
+		public async Task<ActionResult> UpdateEvent([FromBody] Assistance assistance)
 		{
-			var result = await db.Update(@event);
+			var result = await db.Update(assistance);
 
 			return result
 				? Ok(result)
 				: BadRequest(result);
 		}
 
-		[HttpDelete, Route("")]
-		public async Task<ActionResult> DeleteEvent([FromBody] Assistance @event)
+		[HttpDelete, Route("{AssitanceId}")]
+		public async Task<ActionResult> DeleteEvent(int assitanceId)
 		{
-			var result = await db.Delete(@event);
+			var result = await db.Delete<Assistance>(assitanceId);
 
 			return result
 				? Ok(result)
