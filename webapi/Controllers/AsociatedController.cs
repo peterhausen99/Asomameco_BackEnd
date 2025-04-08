@@ -12,9 +12,9 @@ namespace webapi.Controllers
 		private readonly IDbConnection db = _db;
 
 		[HttpGet, Route("{AsociatedId}")]
-		public async Task<ActionResult> GetAsociated(int asociatedId)
+		public async Task<ActionResult> GetAsociated(int AsociatedId)
 		{
-			var result = await db.GetItem<Asociated>($"{asociatedId}");
+			var result = await db.GetItem<Asociated>($"{AsociatedId}");
 			return result is null ? NotFound() : Ok(result);
 		}
 
@@ -46,9 +46,9 @@ namespace webapi.Controllers
 		}
 
 		[HttpDelete, Route("{AsociatedId}")]
-		public async Task<ActionResult> DeleteAsociated(int asociatedId)
+		public async Task<ActionResult> DeleteAsociated(int AsociatedId)
 		{
-			var result = await db.Delete<Asociated>(asociatedId);
+			var result = await db.Delete<Asociated>(AsociatedId);
 
 			return result
 				? Ok(result)

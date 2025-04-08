@@ -46,9 +46,9 @@ namespace webapi.Controllers
 		}
 
 		[HttpDelete, Route("{AssitanceId}")]
-		public async Task<ActionResult> DeleteEvent(int assitanceId)
+		public async Task<ActionResult> DeleteEvent(int AssitanceId)
 		{
-			var result = await db.Delete<Assistance>(assitanceId);
+			var result = await db.Delete<Assistance>(AssitanceId);
 
 			return result
 				? Ok(result)
