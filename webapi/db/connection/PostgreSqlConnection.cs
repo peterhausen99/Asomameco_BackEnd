@@ -54,19 +54,19 @@ namespace webapi.db.connection
 				await using var command = datasource.CreateCommand(QueryGen<T>.Insert);
 				foreach (var field in QueryGen<T>.InsertFields)
 				{
-					var fieldInfo = typeof(T).GetField(field);
-					var fieldValue = typeof(T).GetField(field)?.GetValue(value);
+					var propertyInfo = typeof(T).GetProperty(field);
+					var propertyValue = typeof(T).GetProperty(field)?.GetValue(value);
 
-					if (fieldInfo?.FieldType.IsEnum == true && fieldValue != null)
+					if (propertyInfo?.PropertyType.IsEnum == true && propertyValue != null)
 					{
-						fieldValue = EnumSerializer.ToString(fieldInfo.FieldType, fieldValue);
+						propertyValue = EnumSerializer.ToString(propertyInfo.PropertyType, propertyValue);
 					}
 
-					command.Parameters.AddWithValue($"@{field}", fieldValue ?? DBNull.Value);
+					command.Parameters.AddWithValue($"@{field}", propertyValue ?? DBNull.Value);
 				}
 
 				var result = await command.ExecuteScalarAsync();
-				var IdField = typeof(T).GetField(QueryGen<T>.PrimaryKey);
+				var IdField = typeof(T).GetProperty(QueryGen<T>.PrimaryKey);
 				if (IdField?.GetCustomAttribute<IdentityFieldAttribute>() is not null)
 				{
 					IdField?.SetValue(value, result);
@@ -87,16 +87,16 @@ namespace webapi.db.connection
 				await using var command = datasource.CreateCommand(QueryGen<T>.Update);
 				foreach (var field in QueryGen<T>.Fields)
 				{
-					var fieldInfo = typeof(T).GetField(field);
-					var fieldValue = typeof(T).GetField(field)?.GetValue(value);
+					var propertyInfo = typeof(T).GetProperty(field);
+					var propertyValue = typeof(T).GetProperty(field)?.GetValue(value);
 
-					if (fieldInfo?.FieldType.IsEnum == true && fieldValue != null)
+					if (propertyInfo?.PropertyType.IsEnum == true && propertyValue != null)
 					{
-						fieldValue = EnumSerializer.ToString(fieldInfo.FieldType, fieldValue);
+						propertyValue = EnumSerializer.ToString(propertyInfo.PropertyType, propertyValue);
 					}
-					command.Parameters.AddWithValue($"@{field}", fieldValue ?? DBNull.Value);
+					command.Parameters.AddWithValue($"@{field}", propertyValue ?? DBNull.Value);
 				}
-				var pkValue = typeof(T).GetField(QueryGen<T>.PrimaryKey)?.GetValue(value);
+				var pkValue = typeof(T).GetProperty(QueryGen<T>.PrimaryKey)?.GetValue(value);
 				command.Parameters.AddWithValue("@KeyValue", pkValue ?? DBNull.Value);
 
 				return await command.ExecuteNonQueryAsync() > 0;
@@ -122,7 +122,7 @@ namespace webapi.db.connection
 		private static T MapReaderToObject<T>(NpgsqlDataReader reader) where T : new()
 		{
 			T item = new();
-			var fields = typeof(T).GetFields();
+			var fields = typeof(T).GetProperties();
 
 			for (int i = 0; i < reader.FieldCount; i++)
 			{
@@ -135,13 +135,13 @@ namespace webapi.db.connection
 					if (reader[i] != DBNull.Value)
 					{
 						object value = reader[i];
-						field.SetValue(item, (field.FieldType, value) switch
+						field.SetValue(item, (field.PropertyType, value) switch
 						{
 							(Type boolType, ulong longVal) when boolType == typeof(bool) => longVal != 0,
 							(Type ulongType, int intVal) when ulongType == typeof(ulong) => (ulong)intVal,
 							(Type enumType, string strVal) when enumType.IsEnum => EnumSerializer.Parse(enumType, strVal),
 							(Type enumType, _) when enumType.IsEnum => EnumSerializer.ToString(enumType, value),
-							_ => Convert.ChangeType(value, field.FieldType)
+							_ => Convert.ChangeType(value, field.PropertyType)
 						});
 					}
 				}

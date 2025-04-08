@@ -21,14 +21,16 @@ builder.Services.AddScoped(provider =>
 // Add services to the container.
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
-builder.Services.AddControllers().AddJsonOptions(options =>
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddControllers();
+
+builder.Services.ConfigureHttpJsonOptions(o =>
 {
-	options.JsonSerializerOptions.IncludeFields = true;
-	options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
-	options.JsonSerializerOptions.PropertyNamingPolicy = null;
-	options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter(JsonNamingPolicy.CamelCase));
-}
-);
+	o.SerializerOptions.IncludeFields = true;
+	o.SerializerOptions.PropertyNameCaseInsensitive = true;
+	o.SerializerOptions.PropertyNamingPolicy = null;
+	o.SerializerOptions.Converters.Add(new JsonStringEnumConverter(JsonNamingPolicy.CamelCase));
+});
 
 var app = builder.Build();
 

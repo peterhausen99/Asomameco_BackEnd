@@ -7,7 +7,7 @@ namespace webapi.db
 	{
 		public static object Parse(Type enumType, string value)
 		{
-			foreach (var field in enumType.GetFields())
+			foreach (var field in enumType.GetProperties())
 			{
 				var attr = field.GetCustomAttribute<StringValueAttribute>();
 				if (attr != null && attr.value == value)
@@ -23,7 +23,7 @@ namespace webapi.db
 		{
 			string enumName = Enum.GetName(enumType, enumValue) ?? throw new ArgumentException("Invalid enum value", nameof(enumValue));
 
-			var field = enumType.GetField(enumName);
+			var field = enumType.GetProperty(enumName);
 			var attr = field?.GetCustomAttribute<StringValueAttribute>();
 
 			return attr?.value ?? enumName;
